@@ -1,0 +1,41 @@
+---
+title: "Plot Time series with Ggplot"
+---
+
+Plotting Time series with ggplot
+
+#Packages
+
+```{r,message=F,warning=F}
+
+library(tidyverse)
+
+```
+
+
+
+# Load Data
+
+```{r,message=F,warning=F}
+
+db.ts <-  data.frame(discoveries) %>% 
+          mutate(year = 1860:1959)
+
+```
+
+
+# plot
+
+
+```{r,message=F,warning=F}
+
+db.ts                                       %>% 
+ggplot(aes(year,discoveries))                +
+geom_line(color="red4",lwd=0.5)                      +
+geom_point(color="red4")                                 + 
+theme_bw()                                   +
+ylab("Discoveries ")                                    +
+xlab(" ")
+
+```
+

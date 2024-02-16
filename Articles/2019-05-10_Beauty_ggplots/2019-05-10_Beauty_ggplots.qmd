@@ -1,0 +1,53 @@
+---
+title: "Barplot with Ggplot"
+---
+
+# Plot beauty barplots
+
+We had data of admissions to UCB
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(knitr)
+
+
+db.df<-data.frame(UCBAdmissions)
+
+kable(db.df)
+
+```
+
+A first approach
+
+```{r}
+
+db.df                                                   %>% 
+ggplot()                                                 +
+geom_col(aes(Admit,Freq,fill =Gender),
+         position = position_stack(reverse = FALSE),
+         lwd = 3)     +
+facet_wrap(vars(Dept)) +
+theme_bw()+
+xlab("Admition") +
+ylab("Frequency")
+
+
+```
+
+Plot upgraded
+
+```{r}
+
+db.df                                                   %>% 
+ggplot()                                                 +
+geom_col(aes(Admit,Freq,fill =Gender,color=Gender),alpha=0.5,
+         position = position_stack(reverse = FALSE),
+         lwd = 1.2)     +
+facet_wrap(vars(Dept)) +
+xlab("Admition") +
+ylab("Frequency")+
+scale_fill_viridis_d() +
+scale_color_viridis_d()+
+theme_dark()
+
+```

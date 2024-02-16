@@ -1,0 +1,41 @@
+---
+title: "Articles"
+listing:
+  contents: Articles
+  sort: "date desc"
+  type: default
+  categories: true
+  fields: [date, title, subtitle, description, reading-time]
+page-layout: full
+title-block-banner: true
+execute: 
+  include: false
+---
+
+```{r,message=F,warning=F}
+
+
+library(stringr)
+
+# set up some redirects following 
+# https://blog.djnavarro.net/posts/2022-04-20_porting-to-quarto/#netlify-redirects
+#
+# this relies on netlify deployment
+
+# list names of post folders
+posts <- list.dirs(
+  path = here::here("Articles"),
+  full.names = FALSE,
+  recursive = FALSE
+)
+
+# extract the slugs
+slugs <- gsub("^.*_", "", posts)
+
+# lines to insert to a netlify _redirect file
+redirects <- glue::glue("/{slugs} /Articles/{slugs}")
+
+
+# write the _redirect file
+writeLines(redirects, here::here("_site", "_redirects"))
+```
