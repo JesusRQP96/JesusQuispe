@@ -1,5 +1,5 @@
 ---
-title: "Plot Time series with Ggplot"
+title: "Time series with Ggplot"
 ---
 
 Plotting Time series with ggplot

@@ -1,7 +1,6 @@
 ---
 title: "About"
 about:
-  #template: trestles
   template: solana
   links:
     - icon: github
@@ -13,7 +12,6 @@ about:
     - icon: linkedin
       text: LinkedIn
       href: https://www.linkedin.com/in/jesus-quispe/
-
 comments: false
 ---
 
