@@ -1,0 +1,16 @@
+{
+  "hash": "8bbd4f3d87bc6f0ef8a7ed799a3c02d8",
+  "result": {
+    "markdown": "---\ntitle: \"Plot Time series with Ggplot\"\n---\n\n\nPlotting Time series with ggplot\n\n#Packages\n\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(tidyverse)\n```\n:::\n\n\n\n\n# Load Data\n\n\n::: {.cell}\n\n```{.r .cell-code}\ndb.ts <-  data.frame(discoveries) %>% \n          mutate(year = 1860:1959)\n```\n:::\n\n\n\n# plot\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\ndb.ts                                       %>% \nggplot(aes(year,discoveries))                +\ngeom_line(color=\"red4\",lwd=0.5)                      +\ngeom_point(color=\"red4\")                                 + \ntheme_bw()                                   +\nylab(\"Discoveries \")                                    +\nxlab(\" \")\n```\n\n::: {.cell-output-display}\n![](Time_series_files/figure-html/unnamed-chunk-3-1.png){width=672}\n:::\n:::\n",
+    "supporting": [
+      "Time_series_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

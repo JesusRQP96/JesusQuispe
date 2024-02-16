@@ -3,11 +3,3 @@ title: "Jesus Quispe Q."
 ---
 
 Page of Jesus Miguel Quispe Quispe
-
-```{r,message=F,warning=F}
-
-library(tidyverse)
-library(data.table)
-
-
-```
