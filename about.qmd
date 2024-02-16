@@ -1,9 +1,30 @@
 ---
 title: "About"
+about:
+  #template: trestles
+  template: solana
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/JesusRQP96
+    - icon: twitter
+      text: Twitter
+      href: https://twitter.com/jesmiq
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/jesus-quispe/
+
+comments: false
 ---
 
-About this site
 
-```{r}
-1 + 1
-```
+- I'm a Economist (PUCP). I worked in research and insurance sector. I blog about statistics, programming, and data.
+
+
+- I have extensive experience with  causal inference, regression analysis, spatial analysis, econometrics, actuarial analytics.
+
+- I excel at applied statistics, especially developing new methods to analyze complex data sets.
+
+- I love to collaborate with  scientists and product teams on involved projects.
+
+- You can find my resume here. I'm currently based in Lima,Peru
