@@ -1,0 +1,16 @@
+{
+  "hash": "ce5a5a99b5bc46a36adde750adc9c9ea",
+  "result": {
+    "markdown": "---\ntitle: \"Plotting with Ggplot2:Barplot\"\nsubtitle: \"Barplot\"\ndate: \"2022-01-10\"\ncategories: [Plotting, data analysis]\nexecute:\n  echo: false\n  message: false\n  warning: false\n---\n\n\n# Plot beauty barplots\n\nWe had data of admissions to UCB\n\n\n::: {.cell}\n::: {.cell-output-display}\n|Admit    |Gender |Dept | Freq|\n|:--------|:------|:----|----:|\n|Admitted |Male   |A    |  512|\n|Rejected |Male   |A    |  313|\n|Admitted |Female |A    |   89|\n|Rejected |Female |A    |   19|\n|Admitted |Male   |B    |  353|\n|Rejected |Male   |B    |  207|\n|Admitted |Female |B    |   17|\n|Rejected |Female |B    |    8|\n|Admitted |Male   |C    |  120|\n|Rejected |Male   |C    |  205|\n|Admitted |Female |C    |  202|\n|Rejected |Female |C    |  391|\n|Admitted |Male   |D    |  138|\n|Rejected |Male   |D    |  279|\n|Admitted |Female |D    |  131|\n|Rejected |Female |D    |  244|\n|Admitted |Male   |E    |   53|\n|Rejected |Male   |E    |  138|\n|Admitted |Female |E    |   94|\n|Rejected |Female |E    |  299|\n|Admitted |Male   |F    |   22|\n|Rejected |Male   |F    |  351|\n|Admitted |Female |F    |   24|\n|Rejected |Female |F    |  317|\n:::\n:::\n\n\nA first approach\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](2019-05-10_Beauty_ggplots_files/figure-html/unnamed-chunk-2-1.png){width=672}\n:::\n:::\n\n\nPlot upgraded\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](2019-05-10_Beauty_ggplots_files/figure-html/unnamed-chunk-3-1.png){width=672}\n:::\n:::\n",
+    "supporting": [
+      "2019-05-10_Beauty_ggplots_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

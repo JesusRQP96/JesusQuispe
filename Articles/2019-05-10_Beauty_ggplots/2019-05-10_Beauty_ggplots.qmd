@@ -1,5 +1,12 @@
 ---
-title: "Barplot with Ggplot"
+title: "Plotting with Ggplot2:Barplot"
+subtitle: "Barplot"
+date: "2022-01-10"
+categories: [Plotting, data analysis]
+execute:
+  echo: false
+  message: false
+  warning: false
 ---
 
 # Plot beauty barplots
