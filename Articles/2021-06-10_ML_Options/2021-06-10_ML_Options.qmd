@@ -1,0 +1,288 @@
+---
+title: "Aprendizaje automatico usando Tidymodels"
+subtitle: "Machine learning & Quantitative finance"
+date: "2021-06-10"
+categories: [Quantitative finance, Machine Learning]
+execute:
+  message: false
+  warning: false
+---
+
+# Aplicacion de Machine learning empleando Tidymodels
+
+## Carga de paquetes
+
+```{r,message=F,warning=F}
+library(tidyverse)
+library(tidymodels)
+
+```
+
+## Modelo black- sholes
+
+Uno de los modelos clasicos para llevar acabo el pricing de opciones es el modelo black-sholes el cual tipicamente plantea la siguiente entidad :
+
+$$ C(S_0,t) = S_0 N(d_1) - Ke^{-r(T-t)}N(d_2)$$
+
+Donde:<br>
+
+-   $S_0$: Precio del subyacente (Stock Price)<br>
+-   $C(S0,t)$: Price of the Call Option<br>
+-   $K$: Exercise Price<br>
+-   $(T−t)$: Tiempo de maduracion, donde T es la fecha de ejercicio(Time to Maturity, where T is Exercise Date)<br>
+-   $σ$: Volatilidad subyacente (Underlying Volatility (a standard deviation of log returns))<br>
+-   $r$: Tasa de interes libre de riesgo (Risk-free Interest Rate (i.e., T-bill Rate))<br>
+
+Esta ecuacion puede ser formulada en R del siguiente modo :
+
+```{r,message=F,warning=F}
+
+black_scholes_price <- function(S, K = 70, r = 0, T = 1, sigma = 0.2) {
+  
+  d1     <- (log(S / K) + (r + sigma^2 / 2) * T) / (sigma * sqrt(T))
+  d2     <-  d1 - sigma * sqrt(T)
+  price  <-  S * pnorm(d1) - K * exp(-r * T) * pnorm(d2)
+  
+  return(price)
+}
+
+```
+
+Empleando la anterior expresion, podemos simular precios de opciones;asi como una base de datos de sus determinantes. Dado lo anterior, tendremos un escenario perfecto para llevar acabo metodologias asociadas al aprendizaje automatico o ML ya que podriamos calcular el predecir el precio de una opcion financiera . Asi partimos simulando la base de datos necesaria para el problema de regresion que se nos presenta
+
+```{r,message=F,warning=F}
+
+set.seed(420)
+
+option_prices <- expand_grid(
+  S = 40:50,
+  K = 20:40,
+  r = seq(from = 0, to = 0.03, by = 0.01),
+  T = seq(from = 3 / 12, to = 1.5, by = 1 / 12),
+  sigma = seq(from = 0.1, to = 0.3, by = 0.1)
+) |>
+  mutate(
+    black_scholes = black_scholes_price(S, K, r, T, sigma),
+    observed_price = map_dbl(
+      black_scholes,
+      function(x) x + rnorm(1, sd = 0.15)
+    )
+  )
+
+data.table::data.table(option_prices)
+```
+
+Inmediatamente procedemos a establecer el conjunto de datos de entrenamiento y testeo. Asi como establecemos la metodologia de V-fold validacion cruzada sobre el conjunto de datos de entrenamiento
+
+```{r,message=F,warning=F}
+# 40 -60% 
+split         <- initial_split(option_prices, prop = 0.40)
+option_train  <- training(split)
+option_test   <- testing(split)
+
+
+
+
+set.seed(123)
+option_folds <- vfold_cv(option_train, v = 20)
+
+```
+
+## Definicion del predictor
+
+Luego procedemos a plantear los potenciales predictores del precio de la opcion; asi como el procesamiento basico de los mismo o **Feature engineering** .Para ello empleamos una 'recipe'
+
+```{r,message=F,warning=F}
+
+rec.option <- recipe(observed_price ~ .,
+              data = option_prices
+              ) |>
+  step_rm(black_scholes) |>
+  step_normalize(all_predictors())
+
+
+
+
+
+
+```
+
+## Definicion del modelo o Engine
+
+Definimos el set de modelos que emplearemos y evaluaremos su performance
+
+```{r,message=F,warning=F}
+
+
+mars_model <- mars(  num_terms = tune(),
+                       prod_degree = tune(),
+                       prune_method = tune())  |>
+                set_engine("earth")            |>
+                set_mode("regression")
+
+
+library(bonsai)
+rf_model <-   rand_forest(mtry  = tune(), 
+                           min_n  = tune(), trees = 100)            |>
+              set_engine("ranger")    |>
+              set_mode("regression")
+
+
+
+
+lgbm_model <-   boost_tree(learn_rate = tune(), stop_iter = tune(),
+                            trees = 100) %>%
+                set_engine("lightgbm", num_leaves = tune()) %>%
+                set_mode("regression")
+
+
+
+```
+
+## Definicion de los flujos de trabajo
+
+```{r,message=F,warning=F}
+
+
+mars_wflow   <- workflow(rec.option, mars_model)
+rf_wflow     <- workflow(rec.option, rf_model)
+lgbm_wflow   <- workflow(rec.option, lgbm_model)
+
+
+
+
+```
+
+Luego procedemos a ajustar el modelo planteado sobre los 'folds' creados, mediante la metodologia de validacion cruzada de manera que se busca optimizar los hiperparametros de los modelos planteados
+
+```{r,message=F,warning=F}
+
+
+
+
+set.seed(123)
+mars_time_grid <- system.time(
+                  mars_res_grid <- tune_grid(mars_wflow, option_folds, grid = 5)
+)
+
+
+set.seed(123)
+rf_time_grid<- system.time(
+                  rf_res_grid <- tune_grid(rf_wflow, option_folds, grid = 5)
+)
+
+
+set.seed(123)
+lgbm_time_grid <- system.time(
+                  lgbm_res_grid <- tune_grid(lgbm_wflow, option_folds, grid = 5)
+)
+
+
+```
+
+## Mejor modelo
+
+Procedemos a seleccionar el mejor modelo empleando para ello la metrica de error de la raiz cuadrada media estandarizada o rsme( por sus siglas en ingles )
+
+```{r,message=F,warning=F}
+
+rf_rmse       <- rf_res_grid %>%
+                 select_best("rmse", maximize = FALSE)
+
+lgbm_rmse     <- lgbm_res_grid %>%
+                 select_best("rmse", maximize = FALSE)
+
+mars_rmse     <- mars_res_grid %>%
+                 select_best("rmse", maximize = FALSE)
+
+
+
+
+final_mars <- finalize_workflow(
+              mars_wflow,
+              mars_rmse
+)
+
+final_rf <- finalize_workflow(
+              rf_wflow,
+              rf_rmse
+)
+
+final_lgbm <- finalize_workflow(
+              lgbm_wflow,
+              lgbm_rmse
+)
+
+
+
+
+```
+
+### Metricas en los datos de prueba del mejor modelo
+
+Finalmente reorganizamos los resultados de las metricas de error para facilitar la seleccion del mejor modelo. 
+
+```{r,message=F,warning=F}
+
+
+
+m_mars_db  <- last_fit(
+              final_mars,
+              split
+              ) %>%
+              collect_metrics() %>% 
+              mutate(.model ="mars")
+
+
+m_rf_db  <- last_fit(
+            final_rf,
+            split
+            ) %>%
+            collect_metrics() %>% 
+              mutate(.model ="Random.Forest")
+
+m_lgbm_db  <- last_fit(
+              final_lgbm,
+              split
+              ) %>%
+              collect_metrics()%>% 
+              mutate(.model ="Light.gbm")
+
+
+mtrcs_db   <-rbind(m_mars_db,
+                   m_rf_db,
+                   m_lgbm_db)
+  
+  
+
+  
+```
+
+
+
+```{r,message=F,warning=F,echo=F}
+library(gt)
+
+
+mtrcs_db %>% 
+select(.metric,.estimate,.model) %>% 
+pivot_wider(names_from = .metric,values_from =  .estimate) %>% 
+gt()|>
+tab_header(
+    title = md("**Metricas de error**"),
+    subtitle = "Pricing opciones"
+  )   %>% 
+  tab_options(
+    table.background.color = "white",
+    column_labels.background.color = "white",
+    table.font.size = px(15),
+    column_labels.font.size = px(17),
+    row.striping.background_color = "gray",
+    heading.align = "center",
+    heading.title.font.size = px(20)
+  ) %>% 
+  opt_row_striping() 
+
+```
+
+

@@ -16,7 +16,7 @@ comments: false
 ---
 
 
-- I'm a Economist (PUCP). I worked in research and insurance sector. I blog about statistics, programming, and data.
+- I'm a Economist (PUCP). I worked in research and the insurance sector. I blog about statistics, programming, and data analytics applied in quantitative finance, actuarial science or economics.
 
 
 - I have extensive experience with  causal inference, regression analysis, spatial analysis, econometrics, actuarial analytics.

@@ -9,7 +9,6 @@ execute:
   warning: false
 ---
 
-
 Plotting Time series with ggplot
 
 #Packages
@@ -20,8 +19,6 @@ library(tidyverse)
 
 ```
 
-
-
 # Load Data
 
 ```{r,message=F,warning=F}
@@ -31,9 +28,7 @@ db.ts <-  data.frame(discoveries) %>%
 
 ```
 
-
 # plot
-
 
 ```{r,message=F,warning=F}
 
@@ -46,4 +41,3 @@ ylab("Discoveries ")                                    +
 xlab(" ")
 
 ```
-
