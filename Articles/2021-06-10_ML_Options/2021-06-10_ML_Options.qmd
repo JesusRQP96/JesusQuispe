@@ -13,8 +13,12 @@ execute:
 ## Carga de paquetes
 
 ```{r,message=F,warning=F}
+
+
 library(tidyverse)
 library(tidymodels)
+library(gt)
+
 
 ```
 
@@ -23,6 +27,11 @@ library(tidymodels)
 Uno de los modelos clasicos para llevar acabo el pricing de opciones es el modelo black-sholes el cual tipicamente plantea la siguiente entidad :
 
 $$ C(S_0,t) = S_0 N(d_1) - Ke^{-r(T-t)}N(d_2)$$
+
+$$ d_1 = 	 \frac{(ln\frac{S_{0}}{K} + (r +\frac{σ^2}{2} )(T-t))}{σ	\sqrt{T-t}} $$ 
+
+$$d_2 = d_1 - σ	\sqrt{T-t}$$ 
+
 
 Donde:<br>
 
@@ -69,7 +78,11 @@ option_prices <- expand_grid(
     )
   )
 
-data.table::data.table(option_prices)
+  option_prices |> 
+  gt() 
+  
+
+
 ```
 
 Inmediatamente procedemos a establecer el conjunto de datos de entrenamiento y testeo. Asi como establecemos la metodologia de V-fold validacion cruzada sobre el conjunto de datos de entrenamiento
@@ -180,7 +193,7 @@ lgbm_time_grid <- system.time(
 
 ```
 
-## Mejor modelo
+## Evaluacion del Mejor modelo
 
 Procedemos a seleccionar el mejor modelo empleando para ello la metrica de error de la raiz cuadrada media estandarizada o rsme( por sus siglas en ingles )
 
@@ -218,12 +231,11 @@ final_lgbm <- finalize_workflow(
 
 ```
 
-### Metricas en los datos de prueba del mejor modelo
+### Metricas de error de entrenamiento del mejor modelo
 
 Finalmente reorganizamos los resultados de las metricas de error para facilitar la seleccion del mejor modelo. 
 
 ```{r,message=F,warning=F}
-
 
 
 m_mars_db  <- last_fit(
@@ -261,17 +273,16 @@ mtrcs_db   <-rbind(m_mars_db,
 
 
 ```{r,message=F,warning=F,echo=F}
-library(gt)
 
 
-mtrcs_db %>% 
-select(.metric,.estimate,.model) %>% 
-pivot_wider(names_from = .metric,values_from =  .estimate) %>% 
-gt()|>
+mtrcs_db                                                    |> 
+select(.metric,.estimate,.model)                            |> 
+pivot_wider(names_from = .metric,values_from =  .estimate)  |> 
+gt()                                                        |>
 tab_header(
     title = md("**Metricas de error**"),
     subtitle = "Pricing opciones"
-  )   %>% 
+  )                                                         |>
   tab_options(
     table.background.color = "white",
     column_labels.background.color = "white",
@@ -285,4 +296,69 @@ tab_header(
 
 ```
 
+
+### Comparacion visual :  error de prediccion 
+
+Preprocesamiento del error de prediccion de cada modelo 
+
+```{r,message=F,warning=F}
+
+
+out_of_sample_data <- testing(split)                  |>
+                      slice_sample(n = 10000)
+
+dim(out_of_sample_data)
+
+predictive_performance <- final_mars                  |>         # best workflow
+                          fit(data = training(split)) |>         # fitted with full training dataset
+                          predict(out_of_sample_data) |>           # predict 
+                          rename("mars" = .pred)      |> 
+                          bind_cols(
+                              final_rf                      |>         
+                              fit(data = training(split))   |>         
+                              predict(out_of_sample_data)   |>            
+                              rename("Random.Forest" = .pred) 
+                            )                               |> 
+                          bind_cols(
+                              final_rf                      |>         
+                              fit(data = training(split))   |>         
+                              predict(out_of_sample_data)   |>            
+                              rename("LGBM" = .pred) 
+                            )                               |>
+  bind_cols(out_of_sample_data)                             |>
+  pivot_longer("mars":"LGBM", names_to = "Model")           |>
+    mutate(
+    moneyness = (S - K),
+    pricing_error = abs(value - black_scholes)
+  )
+
+
+
+```
+
+Visualizacion final del error de prediccion de los modelos anteriormente evaluados 
+
+```{r,message=F,warning=F}
+
+predictive_performance |>
+  ggplot(aes(
+    x = moneyness, 
+    y = pricing_error, 
+    color = Model,
+    linetype = Model
+    )) +
+  geom_jitter(alpha = 0.05) +
+  scale_color_viridis_d()+
+  geom_smooth(se = FALSE, method = "gam", formula = y ~ s(x, bs = "cs")) +
+  labs(
+    x = "Moneyness (S - K)", color = NULL,
+    y = "Error de prediccion",
+    title = "Error de prediccion de modelos opciones de compra",
+    linetype = NULL
+  )+theme_bw()+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))
+
+
+```
 
