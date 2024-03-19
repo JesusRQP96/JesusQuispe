@@ -79,6 +79,7 @@ option_prices <- expand_grid(
   )
 
   option_prices |> 
+  head(10)  |>
   gt() 
   
 
