@@ -2,7 +2,7 @@
 title: "Aprendizaje automatico usando Tidymodels"
 subtitle: "Machine learning & Quantitative finance"
 description: |
-  Description of how to use tidymodels to traing Machine learning models.
+  Description of how to use tidymodels to training Machine learning models.
 date: "2021-06-10"
 image: "./fitted_options.jpg"
 categories: [Quantitative finance, Machine Learning]

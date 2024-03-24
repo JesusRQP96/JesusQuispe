@@ -1,6 +1,8 @@
 ---
 title: "Plotting with Ggplot2:Time series"
 subtitle: "Time series"
+description: |
+  Description of how make beauty time series plots
 date: "2022-01-10"
 categories: [Plotting, data analysis]
 execute:

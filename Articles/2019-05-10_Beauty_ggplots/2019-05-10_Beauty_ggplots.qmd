@@ -1,6 +1,8 @@
 ---
 title: "Plotting with Ggplot2:Barplot"
 subtitle: "Barplot"
+description: |
+  Description of how make beauty barplots
 date: "2019-05-10"
 categories: [Plotting, data analysis]
 execute:
@@ -8,6 +10,8 @@ execute:
   message: false
   warning: false
 ---
+
+
 
 # Plot beauty barplots
 
