@@ -1,11 +1,18 @@
 ---
 title: "Aprendizaje automatico usando Tidymodels"
 subtitle: "Machine learning & Quantitative finance"
+description: |
+  Description of how to use tidymodels to traing Machine learning models.
 date: "2021-06-10"
+image: "./fitted_options.jpg"
 categories: [Quantitative finance, Machine Learning]
 execute:
   message: false
   warning: false
+format: 
+  html:
+    toc: true
+engine: knitr
 ---
 
 # Aplicacion de Machine learning empleando Tidymodels
@@ -28,10 +35,9 @@ Uno de los modelos clasicos para llevar acabo el pricing de opciones es el model
 
 $$ C(S_0,t) = S_0 N(d_1) - Ke^{-r(T-t)}N(d_2)$$
 
-$$ d_1 = 	 \frac{(ln\frac{S_{0}}{K} + (r +\frac{σ^2}{2} )(T-t))}{σ	\sqrt{T-t}} $$ 
+$$ d_1 =     \frac{(ln\frac{S_{0}}{K} + (r +\frac{σ^2}{2} )(T-t))}{σ    \sqrt{T-t}} $$
 
-$$d_2 = d_1 - σ	\sqrt{T-t}$$ 
-
+$$d_2 = d_1 - σ \sqrt{T-t}$$
 
 Donde:<br>
 
@@ -169,7 +175,7 @@ lgbm_wflow   <- workflow(rec.option, lgbm_model)
 
 Luego procedemos a ajustar el modelo planteado sobre los 'folds' creados, mediante la metodologia de validacion cruzada de manera que se busca optimizar los hiperparametros de los modelos planteados
 
-```{r,message=F,warning=F}
+```{r,message=F,warning=F,eval=F}
 
 
 
@@ -198,7 +204,7 @@ lgbm_time_grid <- system.time(
 
 Procedemos a seleccionar el mejor modelo empleando para ello la metrica de error de la raiz cuadrada media estandarizada o rsme( por sus siglas en ingles )
 
-```{r,message=F,warning=F}
+```{r,message=F,warning=F,eval=F}
 
 rf_rmse       <- rf_res_grid %>%
                  select_best("rmse", maximize = FALSE)
@@ -234,9 +240,9 @@ final_lgbm <- finalize_workflow(
 
 ### Metricas de error de entrenamiento del mejor modelo
 
-Finalmente reorganizamos los resultados de las metricas de error para facilitar la seleccion del mejor modelo. 
+Finalmente reorganizamos los resultados de las metricas de error para facilitar la seleccion del mejor modelo.
 
-```{r,message=F,warning=F}
+```{r,message=F,warning=F,eval=F}
 
 
 m_mars_db  <- last_fit(
@@ -271,9 +277,7 @@ mtrcs_db   <-rbind(m_mars_db,
   
 ```
 
-
-
-```{r,message=F,warning=F,echo=F}
+```{r,message=F,warning=F,eval=F}
 
 
 mtrcs_db                                                    |> 
@@ -297,12 +301,11 @@ tab_header(
 
 ```
 
+### Comparacion visual : error de prediccion
 
-### Comparacion visual :  error de prediccion 
+Preprocesamiento del error de prediccion de cada modelo
 
-Preprocesamiento del error de prediccion de cada modelo 
-
-```{r,message=F,warning=F}
+```{r,message=F,warning=F,eval=F}
 
 
 out_of_sample_data <- testing(split)                  |>
@@ -337,9 +340,9 @@ predictive_performance <- final_mars                  |>         # best workflow
 
 ```
 
-Visualizacion final del error de prediccion de los modelos anteriormente evaluados 
+Visualizacion final del error de prediccion de los modelos anteriormente evaluados
 
-```{r,message=F,warning=F}
+```{r,message=F,warning=F,eval=F}
 
 predictive_performance |>
   ggplot(aes(
@@ -362,4 +365,3 @@ predictive_performance |>
 
 
 ```
-

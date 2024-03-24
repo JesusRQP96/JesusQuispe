@@ -1,7 +1,7 @@
 ---
 title: "About"
 about:
-  template: solana
+  template: trestles
   links:
     - icon: github
       text: Github
@@ -15,6 +15,7 @@ about:
 comments: false
 ---
 
+ Hi, **I'm Jesus Quispe**
 
 - I'm a Economist (PUCP). I worked in research and the insurance sector. I blog about statistics, programming, and data analytics applied in quantitative finance, actuarial science or economics.
 
