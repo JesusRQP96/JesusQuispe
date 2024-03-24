@@ -175,7 +175,7 @@ lgbm_wflow   <- workflow(rec.option, lgbm_model)
 
 Luego procedemos a ajustar el modelo planteado sobre los 'folds' creados, mediante la metodologia de validacion cruzada de manera que se busca optimizar los hiperparametros de los modelos planteados
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 
 
@@ -204,7 +204,7 @@ lgbm_time_grid <- system.time(
 
 Procedemos a seleccionar el mejor modelo empleando para ello la metrica de error de la raiz cuadrada media estandarizada o rsme( por sus siglas en ingles )
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 rf_rmse       <- rf_res_grid %>%
                  select_best("rmse", maximize = FALSE)
@@ -242,7 +242,7 @@ final_lgbm <- finalize_workflow(
 
 Finalmente reorganizamos los resultados de las metricas de error para facilitar la seleccion del mejor modelo.
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 
 m_mars_db  <- last_fit(
@@ -277,7 +277,7 @@ mtrcs_db   <-rbind(m_mars_db,
   
 ```
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 
 mtrcs_db                                                    |> 
@@ -305,7 +305,7 @@ tab_header(
 
 Preprocesamiento del error de prediccion de cada modelo
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 
 out_of_sample_data <- testing(split)                  |>
@@ -342,7 +342,7 @@ predictive_performance <- final_mars                  |>         # best workflow
 
 Visualizacion final del error de prediccion de los modelos anteriormente evaluados
 
-```{r,message=F,warning=F,eval=F}
+```{r,message=F,warning=F}
 
 predictive_performance |>
   ggplot(aes(

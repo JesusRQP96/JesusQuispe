@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2019-05-10">
-<meta name="description" content="Description of how make beauty barplots">
+<meta name="dcterms.date" content="2024-03-16">
+<meta name="description" content="Description of how to apply the bayesian variable selection approach">
 
-<title>JesusQuispe - Plotting with Ggplot2:Barplot</title>
+<title>JesusQuispe - Bayesian variable selection</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -140,7 +140,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#plot-beauty-barplots" id="toc-plot-beauty-barplots" class="nav-link active" data-scroll-target="#plot-beauty-barplots">Plot beauty barplots</a></li>
+  <li><a href="#load-required-packages" id="toc-load-required-packages" class="nav-link active" data-scroll-target="#load-required-packages">Load required packages</a></li>
+  <li><a href="#preprocess-our-data" id="toc-preprocess-our-data" class="nav-link" data-scroll-target="#preprocess-our-data">Preprocess our data</a></li>
+  <li><a href="#fit-spikeslab-regression" id="toc-fit-spikeslab-regression" class="nav-link" data-scroll-target="#fit-spikeslab-regression">Fit spikeslab regression</a></li>
   </ul>
 </nav>
     </div>
@@ -149,17 +151,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Plotting with Ggplot2:Barplot</h1>
-<p class="subtitle lead">Barplot</p>
+<h1 class="title">Bayesian variable selection</h1>
+<p class="subtitle lead">Drivers of wage</p>
   <div class="quarto-categories">
     <div class="quarto-category">Plotting</div>
     <div class="quarto-category">data analysis</div>
+    <div class="quarto-category">economics</div>
+    <div class="quarto-category">bayesian Analysis</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    <p>Description of how make beauty barplots</p>
+    <p>Description of how to apply the bayesian variable selection approach</p>
   </div>
 </div>
 
@@ -170,7 +174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 10, 2019</p>
+      <p class="date">March 16, 2024</p>
     </div>
   </div>
   
@@ -180,206 +184,143 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<section id="plot-beauty-barplots" class="level1">
-<h1>Plot beauty barplots</h1>
-<p>We had data of admissions to UCB</p>
+<section id="load-required-packages" class="level1">
+<h1>Load required packages</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>db.df<span class="ot">&lt;-</span><span class="fu">data.frame</span>(UCBAdmissions)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(db.df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<table class="table table-sm table-striped small">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Admit</th>
-<th style="text-align: left;">Gender</th>
-<th style="text-align: left;">Dept</th>
-<th style="text-align: right;">Freq</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">512</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">313</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">89</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">19</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">B</td>
-<td style="text-align: right;">353</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">B</td>
-<td style="text-align: right;">207</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">B</td>
-<td style="text-align: right;">17</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">B</td>
-<td style="text-align: right;">8</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">120</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">205</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">202</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">391</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">D</td>
-<td style="text-align: right;">138</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">D</td>
-<td style="text-align: right;">279</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">D</td>
-<td style="text-align: right;">131</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">D</td>
-<td style="text-align: right;">244</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">53</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">138</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">94</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">299</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">22</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">351</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Admitted</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">24</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rejected</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">317</td>
-</tr>
-</tbody>
-</table>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wooldridge)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(spikeslab)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>A first approach</p>
+</section>
+<section id="preprocess-our-data" class="level1">
+<h1>Preprocess our data</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>db.df                                                   <span class="sc">%&gt;%</span> </span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>()                                                 <span class="sc">+</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_col</span>(<span class="fu">aes</span>(Admit,Freq,<span class="at">fill =</span>Gender),</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">reverse =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">lwd =</span> <span class="dv">3</span>)     <span class="sc">+</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">facet_wrap</span>(<span class="fu">vars</span>(Dept)) <span class="sc">+</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"Admition"</span>) <span class="sc">+</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ylab</span>(<span class="st">"Frequency"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="2019-05-10_Beauty_ggplots_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid" width="672"></p>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(wage1, <span class="at">package =</span> <span class="st">"wooldridge"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>wage1 <span class="ot">&lt;-</span> wage1 <span class="sc">|&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>         <span class="fu">select</span>(<span class="sc">-</span>wage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>Plot upgraded</p>
+</section>
+<section id="fit-spikeslab-regression" class="level1">
+<h1>Fit spikeslab regression</h1>
+<p>The spcikeslab regression model enable us to rank the determinants of wage accord to bma and gnet. The calculus of these concepts permits us to select the best drivers in the next steps.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>db.df                                                   <span class="sc">%&gt;%</span> </span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>()                                                 <span class="sc">+</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_col</span>(<span class="fu">aes</span>(Admit,Freq,<span class="at">fill =</span>Gender,<span class="at">color=</span>Gender),<span class="at">alpha=</span><span class="fl">0.5</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">reverse =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">lwd =</span> <span class="fl">1.2</span>)     <span class="sc">+</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">facet_wrap</span>(<span class="fu">vars</span>(Dept)) <span class="sc">+</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"Admition"</span>) <span class="sc">+</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ylab</span>(<span class="st">"Frequency"</span>)<span class="sc">+</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_fill_viridis_d</span>() <span class="sc">+</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_color_viridis_d</span>()<span class="sc">+</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_dark</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>obj <span class="ot">&lt;-</span> <span class="fu">spikeslab</span>(lwage <span class="sc">~</span> . , wage1)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(obj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>------------------------------------------------------------------- 
+Variable selection method     : AIC 
+Big p small n                 : FALSE 
+Screen variables              : FALSE 
+Fast processing               : TRUE 
+Sample size                   : 526 
+No. predictors                : 22 
+No. burn-in values            : 500 
+No. sampled values            : 500 
+Estimated mse                 : 0.1323 
+Model size                    : 22 
+
+
+---&gt; Top variables:
+            bma   gnet bma.scale gnet.scale
+educ      0.131  0.131     0.047      0.047
+female   -0.126 -0.132    -0.252     -0.265
+tenure    0.118  0.154     0.016      0.021
+exper     0.117  0.268     0.009      0.020
+trade    -0.107 -0.130    -0.237     -0.287
+expersq  -0.100 -0.250     0.000      0.000
+profocc   0.100  0.106     0.207      0.219
+services -0.070 -0.087    -0.231     -0.289
+smsa      0.062  0.063     0.137      0.140
+servocc  -0.048 -0.038    -0.137     -0.110
+married   0.044  0.033     0.091      0.068
+tenursq  -0.025 -0.066     0.000      0.000
+west      0.024  0.022     0.064      0.060
+northcen -0.016 -0.023    -0.038     -0.053
+ndurman  -0.013 -0.029    -0.039     -0.090
+south    -0.010 -0.017    -0.021     -0.037
+profserv -0.008 -0.032    -0.017     -0.073
+numdep   -0.005 -0.019    -0.004     -0.015
+trcommpu -0.005 -0.016    -0.024     -0.077
+clerocc   0.001  0.010     0.003      0.027
+construc -0.001 -0.008    -0.004     -0.039
+nonwhite  0.000 -0.001    -0.001     -0.004
+------------------------------------------------------------------- </code></pre>
+</div>
+</div>
+<p>We can improve this approach using CV-validation .</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cv.obj <span class="ot">&lt;-</span> <span class="fu">cv.spikeslab</span>(<span class="at">x =</span> wage1 <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>lwage), <span class="at">y =</span> wage1<span class="sc">$</span>lwage, <span class="at">K =</span> <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     K-fold: 1 
+     K-fold: 2 
+     K-fold: 3 
+     K-fold: 4 
+     K-fold: 5 
+     K-fold: 6 
+     K-fold: 7 
+     K-fold: 8 
+     K-fold: 9 
+     K-fold: 10 
+     final analysis (full-data)</code></pre>
+</div>
 <div class="cell-output-display">
-<p><img src="2019-05-10_Beauty_ggplots_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+<p><img src="Bayesian-Variable-Selection_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>------------------------------------------------------------------- 
+Variable selection method     : cross-validation 
+Big p small n                 : FALSE 
+Screen variables              : FALSE 
+Fast processing               : TRUE 
+Sample size                   : 526 
+No. predictors                : 22 
+No. burn-in values            : 500 
+No. sampled values            : 500 
+K-fold                        : 10 
+CV mean-squared error         : 0.139 +/- 0.009 
+Model size                    : [12,23] 
+
+
+Top variables in terms of stability:
+            bma bma.cv   gnet gnet.cv stability
+educ      0.131  0.131  0.131   0.131       100
+female   -0.126 -0.125 -0.133  -0.129       100
+tenure    0.113  0.118  0.151   0.138       100
+trade    -0.106 -0.108 -0.129  -0.119       100
+profocc   0.099  0.099  0.106   0.103       100
+services -0.069 -0.070 -0.087  -0.078       100
+smsa      0.062  0.061  0.063   0.060       100
+servocc  -0.049 -0.049 -0.038  -0.042       100
+married   0.044  0.044  0.033   0.036       100
+west      0.024  0.024  0.023   0.023       100
+exper     0.122  0.112  0.272   0.206        90
+expersq  -0.105 -0.095 -0.254  -0.189        90
+tenursq  -0.021 -0.026 -0.062  -0.048        90
+northcen -0.015 -0.017 -0.023  -0.017        90
+ndurman  -0.011 -0.013 -0.028  -0.022        90
+south    -0.009 -0.010 -0.017  -0.013        90
+profserv -0.007 -0.009 -0.031  -0.023        90
+numdep   -0.006 -0.006 -0.020  -0.013        90
+trcommpu -0.005 -0.006 -0.016  -0.012        80
+construc -0.001 -0.002 -0.008  -0.006        80
+clerocc   0.001  0.001  0.010   0.005        70
+nonwhite  0.000  0.000 -0.001  -0.001        70
+------------------------------------------------------------------- </code></pre>
+</div>
+</div>
+<p>once the model is fitted, we observed that we need only 10 drivers; on the other hand, the variables that contributes the most in terms of stability are the following :</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cv.stb    <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(cv.obj<span class="sc">$</span>stability)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>gnet      <span class="ot">&lt;-</span> cv.stb<span class="sc">$</span>gnet</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>stability <span class="ot">&lt;-</span> cv.stb<span class="sc">$</span>stability</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gnet,stability,<span class="at">bty=</span><span class="st">"n"</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(gnet, stability, <span class="fu">rownames</span>(cv.obj<span class="sc">$</span>stability), <span class="at">pos=</span><span class="dv">1</span>,<span class="at">cex =</span> <span class="fl">0.8</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>     )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Bayesian-Variable-Selection_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="1440"></p>
 </div>
 </div>
 

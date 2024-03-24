@@ -1,0 +1,69 @@
+---
+title: "Bayesian variable selection"
+subtitle: "Drivers of wage"
+description: |
+  Description of how to apply the bayesian variable selection approach
+date: "2024-03-16"
+categories: [Plotting, data analysis,economics,bayesian Analysis]
+execute:
+  message: false
+  warning: false
+---
+
+# Load required packages 
+
+```{r,message=F,warning=F}
+library(wooldridge)
+library(spikeslab)
+library(dplyr)
+
+```
+
+# Preprocess our data
+
+```{r,message=F,warning=F}
+
+data(wage1, package = "wooldridge")
+
+wage1 <- wage1 |>
+         select(-wage)
+
+```
+
+
+# Fit spikeslab regression
+
+The spcikeslab regression model enable us to rank the determinants of wage accord to bma and gnet. The calculus of these concepts permits us to select the best drivers in the next steps.
+
+```{r,message=F,warning=F}
+
+set.seed(123)
+obj <- spikeslab(lwage ~ . , wage1)
+print(obj)
+
+```
+
+We can improve this approach using CV-validation .
+
+```{r,message=F,warning=F}
+
+cv.obj <- cv.spikeslab(x = wage1 %>% select(-lwage), y = wage1$lwage, K = 10)
+
+```
+
+once the model is fitted, we observed that we need only 10 drivers; on the other hand, the variables that contributes the most in terms of stability are the following : 
+
+
+```{r,message=F,warning=F,fig.width=15}
+cv.stb    <- as.data.frame(cv.obj$stability)
+gnet      <- cv.stb$gnet
+stability <- cv.stb$stability
+
+plot(gnet,stability,bty="n")
+text(gnet, stability, rownames(cv.obj$stability), pos=1,cex = 0.8
+     )
+```
+
+
+
+
