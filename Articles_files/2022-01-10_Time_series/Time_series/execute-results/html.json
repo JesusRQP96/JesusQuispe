@@ -1,7 +1,7 @@
 {
-  "hash": "e0a3a90c19e48e6521e44b0b23e7e8a7",
+  "hash": "b57644b5312a3e2e0e4459f68c005fcf",
   "result": {
-    "markdown": "---\ntitle: \"Plotting with Ggplot2:Time series\"\nsubtitle: \"Time series\"\ndate: \"2022-01-10\"\ncategories: [Plotting, data analysis]\nexecute:\n  echo: false\n  message: false\n  warning: false\n---\n\n\nPlotting Time series with ggplot\n\n#Packages\n\n\n::: {.cell}\n\n:::\n\n\n# Load Data\n\n\n::: {.cell}\n\n:::\n\n\n# plot\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](Time_series_files/figure-html/unnamed-chunk-3-1.png){width=672}\n:::\n:::\n",
+    "markdown": "---\ntitle: \"Plotting with Ggplot2:Time series\"\nsubtitle: \"Time series\"\ndescription: |\n  Description of how make beauty time series plots\ndate: \"2022-01-10\"\ncategories: [Plotting, data analysis]\nexecute:\n  echo: false\n  message: false\n  warning: false\n---\n\n\nPlotting Time series with ggplot\n\n#Packages\n\n\n::: {.cell}\n\n:::\n\n\n# Load Data\n\n\n::: {.cell}\n\n:::\n\n\n# plot\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](Time_series_files/figure-html/unnamed-chunk-3-1.png){width=672}\n:::\n:::\n",
     "supporting": [
       "Time_series_files"
     ],
