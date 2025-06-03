@@ -15,15 +15,14 @@ about:
 comments: false
 ---
 
- Hi, **I'm Jesus Quispe**
+Hi, **I'm Jesus Quispe**
 
-- I'm a Economist (PUCP). I worked in research and the insurance sector. I blog about statistics, programming, and data analytics applied in quantitative finance, actuarial science or economics.
+-   I'm a Economist (PUCP). I worked as analyst. I blog about statistics, programming, and data analytics applied in Actuarial science, Health economics and development economics.
 
+-   I have extensive experience with causal inference, regression analysis, spatial analysis, econometrics, actuarial analytics.
 
-- I have extensive experience with  causal inference, regression analysis, spatial analysis, econometrics, actuarial analytics.
+-   I excel at applied statistics, especially developing new methods to analyze complex data sets.
 
-- I excel at applied statistics, especially developing new methods to analyze complex data sets.
+-   I love to collaborate with scientists and product teams on involved projects.
 
-- I love to collaborate with  scientists and product teams on involved projects.
-
-- You can find my resume here. I'm currently based in Lima,Peru
+-   You can find my resume here. I'm currently based in Lima,Peru

@@ -1,0 +1,538 @@
+---
+title: "Analisis factorial "
+subtitle: "CFA & EFA"
+description: |
+  Applicacion del analisis factorial integrado
+date: "2025-01-01"
+categories: [Multivariate analysis,spychometrics,CFA,EFA]
+execute:
+  message: false
+  warning: false
+---
+
+# Analisis confirmatorio
+
+## Carga de paquetes & datos
+
+```{r,message=F,warning=F}
+
+
+
+
+library(lavaan)
+library(psych)
+library(semTools)   #funcion para analisis de resultados,
+library(tidyverse)
+library(devtools)
+library(readxl)
+
+#install.packages("skimr")
+library(skimr) # package
+
+#Improve L& f of tables
+library(pander)
+
+library(rio)
+library(effectsize)
+
+db_respuesta <- read_excel("respuesta.xlsx")
+
+```
+
+## Analisis factorial integrado
+
+Se emplea un estrategia en 3 pasos muchas veces empleada que integra el analisis factorial exploratorio y el analisis factorial confirmatorio (otras estrategias solo se emplea uno de los 2):
+
+1)  Explorar la estructura factorial (Evaluacion de supuestos).
+2)  Construir el modelo factorial y evaluar el ajuste(estimacion EFA, CFA, criterios de informacion).
+3)  Evaluar generabilidad (ajustar la muestra en los datos de prueba)
+
+### Evaluacion de Supuestos
+
+Los resultados del modelo EFA, finalmente se validan a travez del modelo CFA, de modo tal que la evaluacion de supuestos de uno corresponde tambien la del otro
+
+#### Supuestos en los datos
+
+##### Datos completos
+
+###### skimr + pander
+
+```{r,message=F,warning=F}
+
+skim(db_respuesta) %>% 
+pander()
+
+
+```
+
+##### Tamaño muestral
+
+Rule of thumb \> 200 registros
+
+##### Variables cuantitativas
+
+Un primer requerimiento antes de comenzar con el analisis factorial, es determinar el *nivel de medicion*;es decir, si son variables ordinales, cuantitativas, nominales, ya que la estructura de correlacion es la base del analisis factorial de modo tal que dependiendo de nivel de medicion sera necesario emplear una correlacion: pearson,tetracoricas,policoricas.
+
+Variables con similar rango y continuas
+
+Por defecto muchos paquetes en R asumen que son variables cuantitativas, variables obsersables con \>5 niveles.
+
+##### A) Validar normalidad
+
+```{r,message=F,warning=F,fig.width=7,fig.height=6}
+
+ 
+
+  db.longer_normal <-   db_respuesta                                                                  |> 
+                        select(where(is.numeric))                                                     |> 
+                        pivot_longer(cols = everything(), names_to = "Variable_obs", values_to = "Valor") 
+
+  db.longer_normal     |> 
+  ggplot(aes(x = Valor)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white", alpha = 0.7) +
+  facet_wrap(~ Variable_obs, scales = "free") +  # Crear subgráficos por variable
+  theme_minimal() +
+  labs(title = "Distribución de Variables Numéricas", x = "Variable Obs", y = "Frecuencia")
+
+
+
+```
+
+##### B)Validar normalidad :Metricas estadisticas
+
+-   Hay reglas of generales(rules of thumb), que establecen que ambos estadisticos no deben separar 3
+
+::: panel-tabset
+###### e1071
+
+```{r,message=F,warning=F}
+
+library(e1071)
+
+tbl.stats   <-  db.longer_normal                                            |>
+                group_by(Variable_obs)                                      |>
+                summarise(
+                  skewness = e1071::skewness(Valor, na.rm = TRUE),
+                  kurtosis = e1071::kurtosis(Valor, na.rm = TRUE)
+                )
+library(gt)  
+  
+  
+  tbl.stats                             |>
+  gt()                                  |>
+  data_color(
+    columns = vars(skewness),
+    colors = scales::col_bin(
+      bins = c(-Inf, 0, Inf),
+      palette = c("coral", "aliceblue")
+    )
+  )                                     |>
+  data_color(
+    columns = vars(kurtosis),
+    colors = scales::col_bin(
+      bins = c(-Inf, 0, Inf),
+      palette = c("coral", "aliceblue")
+    )
+  )                                     |>
+  tab_header(
+    title = "Asimetría y Curtosis por Variable"
+  )
+
+```
+
+###### skimr
+
+```{r,message=F,warning=F}
+
+skim(db_respuesta)
+
+```
+
+###### pysch
+
+```{r,message=F,warning=F}
+
+psych::describe(db_respuesta)
+
+```
+
+###### pysch + pander
+
+```{r,message=F,warning=F}
+
+psych::describe(db_respuesta) %>% 
+pander()
+
+```
+:::
+
+#### Supuestos en la matriz de correlacion
+
+##### Estructura de correlacion
+
+Es necesario validar que existe suficiente correlacion entre las variables observadas,sino no tiene caso si quiera plantear la existencia de factores, para ellos se puede calcular el test de *Bartlett*, el cual testea :
+
+ho : Matriz de correlacion es una matriz identidad (0's fuera de la diagonal) h1 : no lo es
+
+```{r,message=F,warning=F}
+
+# nobmres de columnas
+varnames                 <- colnames(db_respuesta)
+
+## Matriz de correlacion 
+mtr.corr_resp            <- cor(db_respuesta[,varnames])
+
+mtr.corr_bart_result     <-psych::cortest.bartlett(R=mtr.corr_resp,n = nrow(db_respuesta))
+
+mtr.corr_bart_result$p.value<0.05  # Mucho cuidado con n, dependiende de su dimensiodad varia de significativo o no 
+
+
+```
+
+##### Existe realmente gran correlacion ?
+
+-   Para ello requerimos el kmo que se puede entender como la propocion de la varianza total, explicada por los factores
+
+-   El estado kmo , en particular se establece los siguientes umbrales :
+
+| KMO        | Interpretación |
+|------------|----------------|
+| ≥ 0.90     | Excelente      |
+| 0.80--0.89 | Muy bueno      |
+| 0.70--0.79 | Aceptable      |
+| 0.60--0.69 | Mediocre       |
+| 0.50--0.59 | Pobre          |
+| \< 0.50    | Inaceptable    |
+
+```{r,message=F,warning=F}
+
+KMO_result <- KMO(db_respuesta)
+
+
+```
+
+#### Muestra para generalizacion
+
+Se recomienda tener una muestra para probar los resultados del modelo factorial, al respecto :
+
+-   para calcular el modelo factorial : n(tamaño muestra) = 5\*numero de parametros
+-   considerar tener una muestra de testeo/ evaluacion para extrapolar/generalizar resultados : 2\*n
+
+```{r,message=F,warning=F}
+# tamaño de muestra mitad
+mitad_muestra     <- nrow(db_respuesta)/2
+
+set.seed(19)
+
+## Vector para marcar datos
+vc_marca          <- sample(c(rep("model.building",mitad_muestra),
+                         rep("holdout",mitad_muestra)
+                         ))
+
+## Dividir el vecto x, segun grupos definidos en el vector y 
+
+db_model.build_list   <- split(db_respuesta,vc_marca)
+
+
+db_train              <-db_model.build_list$model.building
+db_test               <-db_model.build_list$holdout
+
+
+
+```
+
+## EFA : Analisis factorial exploratorio
+
+-   Parte de un supuesto clave: *Existen los factores, pero no se saben cuantos son ni que variables observables lo componen*
+
+-   Puede ser realizada con 2 metodos, que no necesariamente se menoscaban, de hecho se complementan :
+
+a)  Analisis paralelo : Para detectar el numero de factores(ejm constructos)
+b)  Analisis de ajuste : Para detectar el ajuste del modelo con el numero de factores decidido en a) se puede calcular criterios de informacion ejm BIC
+
+```{r,message=F,warning=F}
+
+paralel_results <- fa.parallel(x =db_train,fa="fa")
+
+# cargas factoriales : representan las correlaciones entre las variables obser y el factor latente, si los datos 
+# estuvieran estadarizados
+
+value.factor       <- paralel_results$fa.values    # factorial loadins
+value.factor.simil <- paralel_results$fa.sim
+n.factor           <- 1:length(value.factor)       # numero de factores
+
+screen.data  <- tibble(loading       = value.factor, 
+                       loading_simul = value.factor.simil,
+                       n_factor      = n.factor)
+
+
+
+ 
+```
+
+::: panel-tabset
+### Screen plot
+
+```{r,message=F,warning=F}
+# Idealmente se espera cargas superior a 0.5 (gpt)
+screen.data                                                     |>
+ggplot(aes(n.factor,value.factor))                              +
+geom_line(size = 1, 
+            color = "lightblue")                                +
+geom_hline(yintercept = 0.5, linetype = "dashed",color = "red") +
+geom_point(color="cornflowerblue", 
+             size = 2, 
+             alpha=.8)                                          +
+theme_bw()                                                      +
+xlab("Numero de factores")                                      +
+ylab("carga factorial")
+
+```
+
+### Analisis paralelo
+
+```{r,message=F,warning=F}
+
+
+## Analisis paralelo
+screen.data                        |>
+ggplot() +
+geom_line(aes(n.factor,value.factor),
+            size = 1, 
+            color = "lightblue")   +
+geom_point(aes(n.factor,value.factor),
+             color="cornflowerblue", 
+             size = 2, 
+             alpha=.8)             +
+geom_line(aes(n.factor,value.factor.simil),
+            size = 1, 
+            color = "darkred")   +
+geom_point(aes(n.factor,value.factor.simil),
+             color="darkred", 
+             size = 2, 
+             alpha=.8)             +
+ggtitle("Analisis paralelo")       +
+theme_bw()                         +
+xlab("Numero de factores")         +
+ylab("carga factorial")
+
+
+
+
+```
+:::
+
+Esta metodologia solo dice un numero plausible de factores, mas no el numero final(lo mejor es considerar el rango que lo limita) , el numero final de factores debe ser decidido finalmente en base a : *la interpretabilidad* y el *ajuste*
+
+### Estimacion
+
+La varianza de los items tiene 3 componentes : varianza compartida, especifica, y varianza del error - comunalidad,especificidad y varianza residual .
+
+Para estimar un modelo asi se debe especificar: \* El numero de factores \* El metodo de estimacion \* la rotacion de la matriz
+
+Asi para estimar el modelo hay 3 principales tecnicas: \* ML \* PCA \* PAF
+
+```{r,message=F,warning=F}
+
+results.efa <- lavaan::efa(data      = db_train,
+                           nfactors  = 4:6,     # - el numero otorgado por el analisis paralelo otorga
+                                                #   el rango, el cual seria le numero de factores adecuado.
+                           rotation  = "geomin",# - se escoge este metodo de rotacion xq permite que haya correlacion
+                                                # entre factores y tiene sentido pues se habla de constructos educativos
+                           estimator ="MLR",    # - Preferible metodo de estimacion al ML, por posibles violaciones del
+                                                # supuesto de normalidad
+                           meanstructure = TRUE)
+
+```
+
+#### Criterios de informacion
+
+Deacuerdo la metricas de los criterios de criterios de informacion queda claro que el mejor terminar ajustando es el modelo de 5 factores
+
+```{r,message=F,warning=F}
+
+sort(lavaan::fitmeasures(results.efa)["bic",])
+
+
+```
+
+#### Cargas factoriales
+
+el paquete lavaan te otorga las cargas estandarizadas de modo tal que representarian la correlacion entre la variable observada y el factor
+
+```{r,message=F,warning=F}
+
+results.efa$nf5
+
+```
+
+### Modelo bayesiano
+
+```{r,message=F,warning=F,eval=F}
+
+db_train_sumas <- db_train %>%
+                mutate(
+                  # Aplicamos across con una expresión lógica para cada grupo
+                  TSC = rowSums(across(matches("^TSC\\d+")), na.rm = TRUE),
+                  EE  = rowSums(across(matches("^TE\\d+")),  na.rm = TRUE),
+                  TE  = rowSums(across(matches("^EE\\d+")),  na.rm = TRUE),
+                  DE  = rowSums(across(matches("^DE\\d+")),  na.rm = TRUE),
+                  RPA = rowSums(across(matches("^RPA\\d+")), na.rm = TRUE)
+                )
+
+
+#install.packages("BayesFM")
+library("BayesFM")
+
+# specify model
+model <- c(                                        # X1 covariate in all equations
+            paste0('TSC',' ~ ','TSC',1:5),         # X2 covariate for Y1-Y5 only
+            paste0('TE',' ~ ','TE',6:10),          # X3 covariate for Y6-Y10 only
+            paste0('EE',' ~ ','EE',11:15))         # X4 covariate for Y11-Y15 only
+
+model <- lapply(model, as.formula) # make list of formulas
+
+# run MCMC sampler, post process and summarize
+mcmc <- befa(model, data = db_train, Kmax = 5, iter = 1000)
+
+
+
+```
+
+## CFA : Analisis factorial integrado
+
+Este analisis pone a prueba la estructura establecida, para ello usamos la sintaxis lavaan de modelo, tal que asi:
+
+```{r,message=F,warning=F}
+
+
+CFA_model <- '
+  # Regressing items on factors,ejm el componente TSC es medido por TSC1 + TSC2 + TSC3 + TSC5
+  TSC =~ TSC1 + TSC2 + TSC3 + TSC5
+  TE  =~ TE1  + TE2  + TE3  + TE5
+  EE  =~ EE1  + EE2  + EE3  + EE4
+  DE  =~ DE1  + DE2  + DE3
+  RPA =~ RPA1 + RPA2 + RPA3 + RPA4
+
+  # Se permite correlacion entre factores
+  TSC ~~ TE
+  TSC ~~ EE
+  TSC ~~ DE
+  TSC ~~ RPA
+
+  TE ~~ EE
+  TE ~~ DE
+  TE ~~ RPA
+
+  EE ~~ DE
+  EE ~~ RPA
+
+  DE ~~ RPA
+'
+
+CFA.results.train <- cfa( model         = CFA_model,
+                         data          = db_train,
+                         estimator     = "MLR",
+                         std.lv        = TRUE,
+                         meanstructure = TRUE)
+
+
+```
+
+### Analisis de resultados cfa
+
+-   std.all Corresponde a las cargas factoriales de cada variable observable en cada contructo
+
+::: panel-tabset
+#### A) Default
+
+```{r,message=F,warning=F}
+# referenica : https://www.youtube.com/watch?v=GO5lCfHiFzE***
+
+summary(CFA.results.train,standardized=T,fit.measures=T)
+
+```
+
+#### B) Parameters package
+
+```{r,message=F,warning=F}
+library(parameters)
+model_parameters(CFA.results.train, standardize = "refit")
+
+```
+
+#### C) Grafico del analisis confirmatorio
+
+```{r,message=F,warning=F}
+
+#install.packages("semPlot") no sirve
+```
+:::
+
+### Analisis de ajuste
+
+#### Medidas de ajuste global
+
+Para ver el ajuste del modelo cfa hay medidas globales y locales, respecto de las globales se tienen las siguientes metricas que evaluan el ajuste y sus repectivas regla :
+
+-   CFI \> 0.90 = buen ajuste.
+
+-   RMSEA \< 0.08 = buen ajuste.
+
+-   SRMR \< 0.08 = buen ajuste absoluto.
+
+#### semTools
+
+```{r,message=F,warning=F}
+# Resumen de los parámetros
+#inspect(CFA.results, "std")          # Cargas estandarizadas
+#inspect(CFA.results, "cov.lv")       # Covarianzas entre factores
+
+# Índices de ajuste
+semTools::fitMeasures(CFA.results.train, c("cfi", "tli", "rmsea", "srmr", "aic", "bic"))
+
+# Fiabilidad compuesta y AVE
+#reliability(CFA.results.train)
+
+
+```
+
+#### Medidas de ajuste local
+
+Hay varias medias, pero las mas pertinente corresponde a analizar la diferencia entre la matriz de varianza covarianza entre model-implied y la muestral
+
+```{r,message=F,warning=F}
+
+library(lavaan)
+
+
+# Obtener matriz de correlaciones observadas
+r_observed <- lavInspect(CFA.results.train, "sampstat")$cov
+
+# Obtener matriz de correlaciones reproducidas por el modelo
+r_model    <-  lavInspect(CFA.results.train, "implied")$cov
+
+# Calcular matriz de residuos estandarizados
+residual_matrix <- r_observed - r_model
+
+print(residual_matrix)
+max(residual_matrix)
+
+
+```
+
+### Evaluar la generabilidad
+
+-   si el modelo ajusta bien tambien en el conjunto de datos de entrenamiento, puedes estar seguro que el modelo realmente captura bien la estructura factorial subyacente
+
+```{r,message=F,warning=F}
+
+CFA.results.test <- cfa(model        = CFA_model,
+                       data          = db_test,
+                       estimator     = "MLR",
+                       std.lv        = TRUE,
+                       meanstructure = TRUE)
+
+
+
+```
